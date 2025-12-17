@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 from manager import ManagerData
 from models import Mahasiswa
 from auth import UserManager
@@ -34,7 +33,7 @@ if not st.session_state.login:
 
 # ===== HEADER =====
 st.title("📘 Sistem Informasi Manajemen Akademik")
-st.caption("Versi Web (Streamlit) – Migrasi dari Tkinter")
+st.caption("Versi Streamlit (Tanpa Pandas – FIXED)")
 
 # ===== FORM INPUT =====
 with st.form("form_input"):
@@ -53,60 +52,58 @@ with st.form("form_input"):
 
     if st.form_submit_button("Tambah Data"):
         try:
-            m = Mahasiswa(
+            mgr.add(Mahasiswa(
                 nim, nama, jurusan,
                 angkatan, semester,
                 ipk, telepon, email
-            )
-            mgr.add(m)
+            ))
             st.success("Data berhasil ditambahkan")
+            st.rerun()
         except Exception as e:
             st.error(str(e))
 
-# ===== TABEL DATA =====
+# ===== DATA =====
 st.subheader("📊 Data Mahasiswa")
-df = pd.DataFrame([m.to_dict() for m in mgr.data])
-st.dataframe(df, use_container_width=True)
+
+if mgr.data:
+    st.table([m.to_dict() for m in mgr.data])
+else:
+    st.info("Belum ada data mahasiswa")
 
 # ===== SEARCH =====
 st.subheader("🔍 Pencarian Data")
-colA, colB, colC = st.columns(3)
-keyword = colA.text_input("Keyword")
-field = colB.selectbox("Cari berdasarkan", ["nim", "nama", "jurusan"])
 
-if colC.button("Cari"):
+c1, c2, c3 = st.columns(3)
+keyword = c1.text_input("Keyword")
+field = c2.selectbox("Cari berdasarkan", ["nim", "nama", "jurusan"])
+
+if c3.button("Cari"):
     hasil = mgr.search(keyword, field)
-    df = pd.DataFrame([m.to_dict() for m in hasil])
-    st.dataframe(df, use_container_width=True)
+    st.table([m.to_dict() for m in hasil])
 
-# ===== SORTING =====
-st.subheader("↕ Sorting Data")
-c1, c2 = st.columns(2)
+# ===== SORT =====
+st.subheader("↕ Sorting")
 
-if c1.button("Sort Nama A-Z"):
+s1, s2 = st.columns(2)
+
+if s1.button("Sort Nama A-Z"):
     mgr.sort_nama()
     st.rerun()
 
-if c2.button("Sort IPK"):
+if s2.button("Sort IPK"):
     mgr.sort_ipk()
     st.rerun()
 
 # ===== DELETE =====
 st.subheader("🗑 Hapus Data")
-nim_del = st.text_input("Masukkan NIM")
+nim_del = st.text_input("Masukkan NIM yang akan dihapus")
 
 if st.button("Hapus"):
     mgr.delete(nim_del)
     st.success("Data berhasil dihapus")
     st.rerun()
 
-# ===== CHART =====
-st.subheader("📈 Grafik IPK Mahasiswa")
-if not df.empty:
-    st.bar_chart(df["ipk"])
-
 # ===== LOGOUT =====
 if st.button("Logout"):
     st.session_state.login = False
     st.rerun()
-
