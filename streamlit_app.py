@@ -13,8 +13,8 @@ st.set_page_config(
 if "login" not in st.session_state:
     st.session_state.login = False
 
-auth = UserManager()
 mgr = ManagerData()
+auth = UserManager()
 
 # ===== LOGIN =====
 if not st.session_state.login:
@@ -26,19 +26,19 @@ if not st.session_state.login:
     if st.button("Login"):
         if auth.login(user, pw):
             st.session_state.login = True
-            st.experimental_rerun()
+            st.rerun()
         else:
-            st.error("Username atau password salah")
+            st.error("Username atau Password salah")
 
     st.stop()
 
 # ===== HEADER =====
-st.title("📘 SIM Akademik (Streamlit Version)")
-st.caption("Migrasi dari Tkinter → Web App")
+st.title("📘 Sistem Informasi Manajemen Akademik")
+st.caption("Versi Web (Streamlit) – Migrasi dari Tkinter")
 
 # ===== FORM INPUT =====
-with st.form("form_mhs"):
-    st.subheader("➕ Input Mahasiswa")
+with st.form("form_input"):
+    st.subheader("➕ Input Data Mahasiswa")
 
     col1, col2 = st.columns(2)
 
@@ -51,9 +51,7 @@ with st.form("form_mhs"):
     telepon = col2.text_input("Telepon")
     email = col2.text_input("Email")
 
-    submit = st.form_submit_button("Tambah Data")
-
-    if submit:
+    if st.form_submit_button("Tambah Data"):
         try:
             m = Mahasiswa(
                 nim, nama, jurusan,
@@ -65,52 +63,50 @@ with st.form("form_mhs"):
         except Exception as e:
             st.error(str(e))
 
-# ===== DATAFRAME =====
+# ===== TABEL DATA =====
 st.subheader("📊 Data Mahasiswa")
-
 df = pd.DataFrame([m.to_dict() for m in mgr.data])
-
 st.dataframe(df, use_container_width=True)
 
-# ===== FILTER =====
-st.subheader("🔍 Filter & Search")
+# ===== SEARCH =====
+st.subheader("🔍 Pencarian Data")
+colA, colB, colC = st.columns(3)
+keyword = colA.text_input("Keyword")
+field = colB.selectbox("Cari berdasarkan", ["nim", "nama", "jurusan"])
 
-colf1, colf2, colf3 = st.columns(3)
-field = colf1.selectbox("Field", ["nama", "jurusan", "semester"])
-keyword = colf2.text_input("Keyword")
-
-if colf3.button("Cari"):
-    result = mgr.search(keyword, field)
-    df = pd.DataFrame([m.to_dict() for m in result])
+if colC.button("Cari"):
+    hasil = mgr.search(keyword, field)
+    df = pd.DataFrame([m.to_dict() for m in hasil])
     st.dataframe(df, use_container_width=True)
 
-# ===== SORT =====
-st.subheader("↕ Sorting")
+# ===== SORTING =====
+st.subheader("↕ Sorting Data")
+c1, c2 = st.columns(2)
 
-cols = st.columns(3)
-if cols[0].button("Sort Nama A-Z"):
-    mgr.sort_by_name()
-    st.experimental_rerun()
+if c1.button("Sort Nama A-Z"):
+    mgr.sort_nama()
+    st.rerun()
 
-if cols[1].button("Sort IPK"):
-    mgr.sort_by_ipk()
-    st.experimental_rerun()
+if c2.button("Sort IPK"):
+    mgr.sort_ipk()
+    st.rerun()
 
 # ===== DELETE =====
 st.subheader("🗑 Hapus Data")
-nim_del = st.text_input("Masukkan NIM yang akan dihapus")
+nim_del = st.text_input("Masukkan NIM")
 
 if st.button("Hapus"):
     mgr.delete(nim_del)
-    st.success("Data dihapus")
-    st.experimental_rerun()
+    st.success("Data berhasil dihapus")
+    st.rerun()
 
 # ===== CHART =====
-st.subheader("📈 Visualisasi IPK")
+st.subheader("📈 Grafik IPK Mahasiswa")
 if not df.empty:
     st.bar_chart(df["ipk"])
 
 # ===== LOGOUT =====
 if st.button("Logout"):
     st.session_state.login = False
-    st.experimental_rerun()
+    st.rerun()
+
